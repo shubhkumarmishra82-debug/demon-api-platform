@@ -227,3 +227,19 @@ console.log(data);
   <sub>Built with ❤️ for Developers, Telegram Bots, and Discord Bots. Licensed under MIT.</sub>
 
 </div>
+
+
+# Server Configuration
+PORT=3000
+NODE_ENV=production
+JWT_SECRET=demon_super_secret_jwt_key_2026
+
+# FamPay UPI & IMAP Auto-Payment Credentials
+FAMPAY_UPI_ID=madara412@fam
+GMAIL_USER=ragini.19854@gmail.com
+GMAIL_APP_PASSWORD=yhzlqqhtsxeaoztg
+IMAP_HOST=imap.gmail.com
+IMAP_PORT=993
+
+# Master Admin Gmail Accounts (Comma Separated)
+ADMIN_EMAILS=ragini.19854@gmail.com,shubhkumarmishra82@gmail.com
