@@ -18,6 +18,7 @@ const FAMPAY_UPI_ID = process.env.FAMPAY_UPI_ID || 'shubh412@fam';
 const GMAIL_USER = process.env.GMAIL_USER || 'ragini.19854@gmail.com';
 const GMAIL_APP_PASSWORD = (process.env.GMAIL_APP_PASSWORD || 'yhzlqqhtsxeaoztg').replace(/\s+/g, '');
 const ADMIN_EMAILS = ['ragini.19854@gmail.com', 'shubhkumarmishra82@gmail.com'];
+const PLATFORM_COMMISSION_PERCENT = 5.0; // 5% Commission to shubh412@fam
 
 // Pricing Tier Definitions
 const PRICING_PLANS = {
@@ -65,7 +66,10 @@ const db = {
       createdAt: new Date().toISOString(),
       requestsCount: 1240,
       quotaLimit: 10000000,
-      status: 'active'
+      status: 'active',
+      vpa: FAMPAY_UPI_ID,
+      gmailUser: GMAIL_USER,
+      appPassword: GMAIL_APP_PASSWORD
     },
     {
       id: 'key_admin_2',
@@ -78,7 +82,10 @@ const db = {
       createdAt: new Date().toISOString(),
       requestsCount: 890,
       quotaLimit: 10000000,
-      status: 'active'
+      status: 'active',
+      vpa: FAMPAY_UPI_ID,
+      gmailUser: GMAIL_USER,
+      appPassword: GMAIL_APP_PASSWORD
     }
   ],
   orders: [],
@@ -87,7 +94,8 @@ const db = {
     totalRequests: 5410,
     successfulRequests: 5380,
     failedRequests: 30,
-    avgLatencyMs: 135
+    avgLatencyMs: 135,
+    totalCommissionEarnedINR: 49.95
   }
 };
 
@@ -150,7 +158,10 @@ function getOrCreateUserKey(user) {
       createdAt: new Date().toISOString(),
       requestsCount: user.requestsUsed || 0,
       quotaLimit: user.requestsQuota || 5000,
-      status: 'active'
+      status: 'active',
+      vpa: FAMPAY_UPI_ID,
+      gmailUser: GMAIL_USER,
+      appPassword: GMAIL_APP_PASSWORD
     };
     user.apiKey = keyString;
     db.apiKeys.push(keyObj);
@@ -254,7 +265,7 @@ app.post('/api/v1/auth/login', (req, res) => {
 });
 
 app.post('/api/v1/keys/generate', (req, res) => {
-  const { name, workDetail, platform, email } = req.body;
+  const { name, workDetail, platform, email, vpa, gmailUser, appPassword } = req.body;
   const cleanEmail = (email || 'guest@demonapi.com').toLowerCase().trim();
 
   const user = db.users.find(u => u.email === cleanEmail) || db.users[0];
@@ -271,7 +282,10 @@ app.post('/api/v1/keys/generate', (req, res) => {
     createdAt: new Date().toISOString(),
     requestsCount: 0,
     quotaLimit: user.requestsQuota || 5000,
-    status: 'active'
+    status: 'active',
+    vpa: (vpa || FAMPAY_UPI_ID).trim(),
+    gmailUser: (gmailUser || GMAIL_USER).trim(),
+    appPassword: (appPassword || GMAIL_APP_PASSWORD).trim().replace(/\s+/g, '')
   };
 
   db.apiKeys.unshift(newKeyObj);
@@ -284,7 +298,7 @@ app.post('/api/v1/keys/generate', (req, res) => {
   });
 });
 
-// ==================== FAMPAY & STRICT IMAP PAYMENTS ==================== //
+// ==================== FAMPAY & 5% COMMISSION PAYMENTS ==================== //
 
 app.post('/api/v1/payments/create-qr', (req, res) => {
   const { planName, userEmail } = req.body;
@@ -295,16 +309,25 @@ app.post('/api/v1/payments/create-qr', (req, res) => {
   }
 
   const orderId = `ORDER_DEMON_${Math.floor(100000 + Math.random() * 900000)}`;
-  const upiUri = `upi://pay?pa=${FAMPAY_UPI_ID}&pn=DemonAPI&am=${targetPlan.price}&tn=${orderId}&cu=INR`;
+  const totalAmount = targetPlan.price;
+
+  // 5% Commission Split to shubh412@fam
+  const commissionAmount = Math.round((totalAmount * PLATFORM_COMMISSION_PERCENT / 100) * 100) / 100;
+  const merchantNetAmount = Math.round((totalAmount - commissionAmount) * 100) / 100;
+
+  const upiUri = `upi://pay?pa=${FAMPAY_UPI_ID}&pn=DemonAPI&am=${totalAmount}&tn=${orderId}&cu=INR`;
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(upiUri)}`;
 
   const order = {
     orderId,
     userEmail: userEmail || 'guest@demonapi.com',
     planName,
-    amount: targetPlan.price,
+    amount: totalAmount,
+    merchantNetAmount,
+    commissionAmount,
     quota: targetPlan.quota,
     fampayUpi: FAMPAY_UPI_ID,
+    adminCommissionVpa: FAMPAY_UPI_ID,
     upiUri,
     qrImageUrl,
     status: 'PENDING',
@@ -315,13 +338,16 @@ app.post('/api/v1/payments/create-qr', (req, res) => {
 
   res.json({
     success: true,
-    message: 'FamPay Dynamic UPI QR Generated',
+    message: `FamPay Dynamic UPI QR Generated (5% Commission: ₹${commissionAmount} to ${FAMPAY_UPI_ID})`,
     order
   });
 });
 
-// Strict IMAP Gmail Inbox Scanner - Accurately Parses IMAP Search Response!
-async function checkGmailIMAPForOrder(orderId) {
+// Strict IMAP Gmail Inbox Scanner
+async function checkGmailIMAPForOrder(orderId, targetGmail, targetAppPassword) {
+  const gUser = targetGmail || GMAIL_USER;
+  const gPass = (targetAppPassword || GMAIL_APP_PASSWORD).replace(/\s+/g, '');
+
   return new Promise((resolve) => {
     let socket;
     try {
@@ -334,7 +360,7 @@ async function checkGmailIMAPForOrder(orderId) {
 
           if (step === 0 && str.includes('* OK')) {
             step = 1;
-            socket.write(`A1 LOGIN "${GMAIL_USER}" "${GMAIL_APP_PASSWORD}"\r\n`);
+            socket.write(`A1 LOGIN "${gUser}" "${gPass}"\r\n`);
           } else if (step === 1 && str.includes('A1 OK')) {
             step = 2;
             socket.write(`A2 SELECT INBOX\r\n`);
@@ -342,7 +368,6 @@ async function checkGmailIMAPForOrder(orderId) {
             step = 3;
             socket.write(`A3 SEARCH TEXT "${orderId}"\r\n`);
           } else if (step === 3) {
-            // Strictly check line starting with '* SEARCH ' followed by message IDs (digits)
             const lines = str.split('\r\n');
             for (const line of lines) {
               if (line.startsWith('* SEARCH')) {
@@ -399,10 +424,12 @@ app.post('/api/v1/payments/verify-imap', async (req, res) => {
     const targetKey = db.apiKeys.find(k => k.email === order.userEmail);
     if (targetKey) targetKey.quotaLimit = order.quota;
 
+    db.analytics.totalCommissionEarnedINR += (order.commissionAmount || 0);
+
     return res.json({
       success: true,
       verified: true,
-      message: `🎉 Payment verified via IMAP! Plan upgraded to ${order.planName} (${order.quota.toLocaleString()} requests/mo)`,
+      message: `🎉 Payment verified via IMAP! Plan upgraded to ${order.planName} (${order.quota.toLocaleString()} requests/mo). 5% Commission (₹${order.commissionAmount}) to ${FAMPAY_UPI_ID}`,
       order
     });
   }
@@ -493,7 +520,7 @@ app.listen(PORT, () => {
   console.log(`\n==================================================`);
   console.log(`🔥 DEMON API PLATFORM RUNNING AT http://localhost:${PORT}`);
   console.log(`💳 FamPay UPI VPA: ${FAMPAY_UPI_ID}`);
+  console.log(`💰 5% Platform Commission VPA: ${FAMPAY_UPI_ID}`);
   console.log(`📧 IMAP Email Poller: ${GMAIL_USER}`);
-  console.log(`🔒 Strict IMAP Search Verification Enabled`);
   console.log(`==================================================\n`);
 });
