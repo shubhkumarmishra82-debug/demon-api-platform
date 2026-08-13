@@ -56,7 +56,6 @@ function handleGetStartedClick() {
   }
 }
 
-// Automatic Email Scanner & Role Dispatcher
 function dispatchUserToPanel() {
   if (!currentUser) return;
 
@@ -278,6 +277,7 @@ async function verifyImapPaymentAuto() {
   await executeImapCheck(false);
 }
 
+// Strict Real IMAP Verification (No Test Simulation Flag!)
 async function executeImapCheck(isManual) {
   if (!activeOrderId) return;
   const msgBox = document.getElementById('fp-status-msg');
@@ -288,7 +288,7 @@ async function executeImapCheck(isManual) {
     const res = await fetch('/api/v1/payments/verify-imap', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId: activeOrderId, force_simulate: isManual })
+      body: JSON.stringify({ orderId: activeOrderId })
     });
     const data = await res.json();
 

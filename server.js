@@ -14,11 +14,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Configuration
-const FAMPAY_UPI_ID = process.env.FAMPAY_UPI_ID || 'madara412@fam';
+const FAMPAY_UPI_ID = process.env.FAMPAY_UPI_ID || 'shubh412@fam';
 const GMAIL_USER = process.env.GMAIL_USER || 'ragini.19854@gmail.com';
 const GMAIL_APP_PASSWORD = (process.env.GMAIL_APP_PASSWORD || 'yhzlqqhtsxeaoztg').replace(/\s+/g, '');
-
-// Exact Admin Gmail Accounts
 const ADMIN_EMAILS = ['ragini.19854@gmail.com', 'shubhkumarmishra82@gmail.com'];
 
 // Pricing Tier Definitions
@@ -184,7 +182,6 @@ app.post('/api/v1/auth/google', (req, res) => {
     };
     db.users.push(user);
   } else {
-    // Refresh role if email is admin
     user.role = isAdmin ? 'admin' : 'user';
     if (isAdmin) {
       user.plan = 'Business';
@@ -287,7 +284,7 @@ app.post('/api/v1/keys/generate', (req, res) => {
   });
 });
 
-// ==================== FAMPAY & IMAP PAYMENTS ==================== //
+// ==================== FAMPAY & STRICT IMAP PAYMENTS ==================== //
 
 app.post('/api/v1/payments/create-qr', (req, res) => {
   const { planName, userEmail } = req.body;
@@ -323,39 +320,62 @@ app.post('/api/v1/payments/create-qr', (req, res) => {
   });
 });
 
+// Strict IMAP Gmail Inbox Scanner - Accurately Parses IMAP Search Response!
 async function checkGmailIMAPForOrder(orderId) {
   return new Promise((resolve) => {
-    const socket = tls.connect(993, 'imap.gmail.com', { rejectUnauthorized: false }, () => {
-      let step = 0;
-      let emailFound = false;
+    let socket;
+    try {
+      socket = tls.connect(993, 'imap.gmail.com', { rejectUnauthorized: false }, () => {
+        let step = 0;
+        let emailFound = false;
 
-      socket.on('data', (data) => {
-        const str = data.toString();
-        if (step === 0 && str.includes('* OK')) {
-          step = 1;
-          socket.write(`A1 LOGIN "${GMAIL_USER}" "${GMAIL_APP_PASSWORD}"\r\n`);
-        } else if (step === 1 && str.includes('A1 OK')) {
-          step = 2;
-          socket.write(`A2 SELECT INBOX\r\n`);
-        } else if (step === 2 && str.includes('A2 OK')) {
-          step = 3;
-          socket.write(`A3 SEARCH TEXT "${orderId}"\r\n`);
-        } else if (step === 3) {
-          if (str.includes('* SEARCH') && str.replace('* SEARCH', '').trim().length > 0) {
-            emailFound = true;
+        socket.on('data', (data) => {
+          const str = data.toString();
+
+          if (step === 0 && str.includes('* OK')) {
+            step = 1;
+            socket.write(`A1 LOGIN "${GMAIL_USER}" "${GMAIL_APP_PASSWORD}"\r\n`);
+          } else if (step === 1 && str.includes('A1 OK')) {
+            step = 2;
+            socket.write(`A2 SELECT INBOX\r\n`);
+          } else if (step === 2 && str.includes('A2 OK')) {
+            step = 3;
+            socket.write(`A3 SEARCH TEXT "${orderId}"\r\n`);
+          } else if (step === 3) {
+            // Strictly check line starting with '* SEARCH ' followed by message IDs (digits)
+            const lines = str.split('\r\n');
+            for (const line of lines) {
+              if (line.startsWith('* SEARCH')) {
+                const searchResultIds = line.substring(8).trim();
+                if (searchResultIds.length > 0 && /\d+/.test(searchResultIds)) {
+                  emailFound = true;
+                }
+              }
+            }
+            socket.write(`A4 LOGOUT\r\n`);
+            socket.end();
+            resolve(emailFound);
           }
-          socket.write(`A4 LOGOUT\r\n`);
-          socket.end();
-          resolve(emailFound);
-        }
+        });
       });
-    });
 
-    socket.on('error', () => resolve(false));
-    setTimeout(() => { socket.destroy(); resolve(false); }, 5000);
+      socket.on('error', (err) => {
+        console.error('IMAP Socket Error:', err.message);
+        resolve(false);
+      });
+
+      setTimeout(() => {
+        if (socket) socket.destroy();
+        resolve(false);
+      }, 6000);
+    } catch (err) {
+      console.error('IMAP connection exception:', err.message);
+      resolve(false);
+    }
   });
 }
 
+// Strict IMAP Payment Verification Endpoint
 app.post('/api/v1/payments/verify-imap', async (req, res) => {
   const { orderId } = req.body;
   const order = db.orders.find(o => o.orderId === orderId);
@@ -363,9 +383,10 @@ app.post('/api/v1/payments/verify-imap', async (req, res) => {
   if (!order) return res.status(404).json({ success: false, error: 'Order ID not found' });
   if (order.status === 'PAID') return res.json({ success: true, verified: true, message: 'Order already verified!', order });
 
+  // STRICT IMAP INBOX SEARCH
   const isFoundInEmail = await checkGmailIMAPForOrder(orderId);
 
-  if (isFoundInEmail || req.body.force_simulate === true) {
+  if (isFoundInEmail) {
     order.status = 'PAID';
     order.paidAt = new Date().toISOString();
 
@@ -389,7 +410,7 @@ app.post('/api/v1/payments/verify-imap', async (req, res) => {
   res.json({
     success: true,
     verified: false,
-    message: 'Payment email not yet detected in IMAP inbox. Please wait 10 seconds and re-check.',
+    message: '❌ Payment email not detected in Gmail inbox yet. Please complete the UPI payment using the generated QR code and retry.',
     order
   });
 });
@@ -471,6 +492,8 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`\n==================================================`);
   console.log(`🔥 DEMON API PLATFORM RUNNING AT http://localhost:${PORT}`);
-  console.log(`👑 Admin Emails: ragini.19854@gmail.com & shubhkumarmishra82@gmail.com`);
+  console.log(`💳 FamPay UPI VPA: ${FAMPAY_UPI_ID}`);
+  console.log(`📧 IMAP Email Poller: ${GMAIL_USER}`);
+  console.log(`🔒 Strict IMAP Search Verification Enabled`);
   console.log(`==================================================\n`);
 });
