@@ -1,0 +1,26 @@
+{
+  "name": "demon-api-platform",
+  "version": "1.0.0",
+  "description": "Demon API Platform - Production-Ready SaaS Gateway with 50+ APIs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  },
+  "keywords": [
+    "api",
+    "gateway",
+    "saas",
+    "ai",
+    "telegram-bot",
+    "discord-bot",
+    "developer-tools"
+  ],
+  "author": "Demon API Platform",
+  "license": "MIT"
+}

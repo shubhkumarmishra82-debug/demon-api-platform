@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demon API Platform - One API Key. Endless Possibilities.</title>
+  <meta name="description" content="Production-ready developer API SaaS providing 50+ APIs through a single unified API key for Web, Telegram, Discord, and AI Apps.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <a href="#" class="logo" onclick="switchSection('landing')">
+        <div class="logo-badge">😈</div>
+        <span>DEMON <span style="color:var(--cyan-primary);">API</span></span>
+      </a>
+      <ul class="nav-links">
+        <li><a class="nav-link active" onclick="switchSection('landing')">Home</a></li>
+        <li><a class="nav-link" id="nav-dash" onclick="switchSection('dashboard')">Dashboard</a></li>
+        <li><a class="nav-link" id="nav-keys" onclick="switchSection('keys')">API Keys</a></li>
+        <li><a class="nav-link" id="nav-playground" onclick="switchSection('playground')">Playground</a></li>
+        <li><a class="nav-link" id="nav-docs" onclick="switchSection('docs')">API Docs</a></li>
+        <li><a class="nav-link" id="nav-pricing" onclick="switchSection('pricing')">Pricing</a></li>
+        <li><a class="nav-link" id="nav-admin" style="display:none;" onclick="switchSection('admin')">👑 Admin Panel</a></li>
+      </ul>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div id="user-auth-badge">
+          <button class="btn btn-primary btn-sm" onclick="openAuthModal()">🔐 Login / Sign Up</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="container">
+
+    <!-- 1. LANDING PAGE SECTION -->
+    <section id="sec-landing" class="page-section active">
+      <div class="hero">
+        <div class="hero-pill">⚡ Next-Gen Developer Gateway • 50+ APIs Live</div>
+        <h1 class="hero-title">One API Key.<br><span>Endless Possibilities.</span></h1>
+        <p class="hero-subtitle">Access 50+ developer APIs for AI, Images, PDFs, Security, Web, Utilities, Payments, Media, and Fun through a single high-speed endpoint.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" onclick="handleGetStartedClick()">⚡ Get Your API Key</button>
+          <button class="btn btn-outline" onclick="switchSection('playground')">🧪 Test in Playground</button>
+        </div>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:60px;">
+        <div class="glass-card stat-card">
+          <div class="stat-value" style="color:var(--purple-primary);">50+</div>
+          <div class="stat-label">Developer API Endpoints</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-value" style="color:var(--cyan-primary);">&lt; 140ms</div>
+          <div class="stat-label">Average Global Latency</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-value" style="color:var(--green-success);">99.99%</div>
+          <div class="stat-label">Guaranteed Uptime</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-value">1 Key</div>
+          <div class="stat-label">Unified Auth & Rate Limiting</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. USER DASHBOARD SECTION -->
+    <section id="sec-dashboard" class="page-section">
+      <h2 style="font-size:2rem; font-weight:800; margin-bottom:24px;">Developer Panel</h2>
+      
+      <div class="grid-4" style="margin-bottom:30px;">
+        <div class="glass-card stat-card">
+          <div class="stat-label">Current Plan</div>
+          <div class="stat-value" id="dash-user-plan" style="color:var(--purple-primary);">Free Tier</div>
+          <div style="font-size:0.8rem; color:var(--text-subtle);" id="dash-user-quota-label">5,000 requests/mo</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-label">Requests Today</div>
+          <div class="stat-value" id="dash-today-req">0</div>
+          <div style="font-size:0.8rem; color:var(--green-success);">Active</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-label">Success Rate</div>
+          <div class="stat-value" style="color:var(--green-success);">100%</div>
+          <div style="font-size:0.8rem; color:var(--text-subtle);">Fast Engine</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-label">Account Role</div>
+          <div class="stat-value" id="dash-user-role" style="color:var(--cyan-primary);">USER</div>
+          <div style="font-size:0.8rem; color:var(--text-subtle);" id="dash-user-email">guest@demonapi.com</div>
+        </div>
+      </div>
+
+      <div class="glass-card" style="margin-bottom:30px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3>Monthly Quota Usage</h3>
+          <span class="badge badge-purple" id="dash-quota-badge">0 / 5,000 Used</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.05); height:12px; border-radius:6px; overflow:hidden;">
+          <div style="background:linear-gradient(90deg, var(--purple-primary), var(--cyan-primary)); width: 1%; height:100%;"></div>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3>Your Primary API Key</h3>
+          <button class="btn btn-primary btn-sm" onclick="openKeyModal()">+ Create New API Key</button>
+        </div>
+        <div class="code-box" style="margin-top:12px;">
+          <span id="dash-user-key">sk-demon-not-generated-yet</span>
+          <button class="copy-btn" onclick="copyText(document.getElementById('dash-user-key').innerText)">Copy Key</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. API KEYS SECTION -->
+    <section id="sec-keys" class="page-section">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <div>
+          <h2 style="font-size:2rem; font-weight:800;">API Keys & Project Setup</h2>
+          <p style="color:var(--text-muted);">Specify your application work details to generate custom API keys.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openKeyModal()">+ Create New API Key</button>
+      </div>
+
+      <div class="glass-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Project Name</th>
+              <th>Work / Use Case Detail</th>
+              <th>Target Platform</th>
+              <th>API Key</th>
+              <th>Quota</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="key-table-body">
+            <!-- Dynamically Rendered -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 4. PLAYGROUND SECTION -->
+    <section id="sec-playground" class="page-section">
+      <h2 style="font-size:2rem; font-weight:800; margin-bottom:8px;">Interactive API Playground</h2>
+      <p style="color:var(--text-muted); margin-bottom:24px;">Execute live requests against all 50+ Demon API endpoints.</p>
+
+      <div class="grid-2">
+        <div class="glass-card">
+          <h3>Request Builder</h3>
+          
+          <div class="form-group" style="margin-top:16px;">
+            <label class="form-label">Select Endpoint</label>
+            <select class="form-select" id="pg-endpoint-select" onchange="loadPlaygroundPreset()">
+              <optgroup label="🧠 AI">
+                <option value="/api/v1/ai/chat">POST /api/v1/ai/chat</option>
+                <option value="/api/v1/ai/summarize">POST /api/v1/ai/summarize</option>
+                <option value="/api/v1/ai/translate">POST /api/v1/ai/translate</option>
+              </optgroup>
+              <optgroup label="🛡️ Security">
+                <option value="/api/v1/security/ip">GET /api/v1/security/ip</option>
+                <option value="/api/v1/security/email-verify">POST /api/v1/security/email-verify</option>
+              </optgroup>
+              <optgroup label="🛠️ Utilities">
+                <option value="/api/v1/utilities/uuid">GET /api/v1/utilities/uuid</option>
+                <option value="/api/v1/fun/joke">GET /api/v1/fun/joke</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Your API Key</label>
+            <input type="text" class="form-input" id="pg-api-key" placeholder="Generate key first...">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Request Body (JSON)</label>
+            <textarea class="form-textarea" id="pg-request-body" rows="6">{\n  "prompt": "Hello Demon API",\n  "model": "demon-ai-pro"\n}</textarea>
+          </div>
+
+          <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="executePlaygroundRequest()">⚡ Send Request</button>
+        </div>
+
+        <div class="glass-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3>API Response</h3>
+            <div id="pg-status-badge"><span class="badge badge-green">200 OK</span></div>
+          </div>
+
+          <div class="code-box" id="pg-response-box" style="height:320px; overflow-y:auto;">
+{
+  "success": true,
+  "message": "Send a request to see live output"
+}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. COMPREHENSIVE API DOCUMENTATION SECTION -->
+    <section id="sec-docs" class="page-section">
+      <h2 style="font-size:2rem; font-weight:800; margin-bottom:8px;">Comprehensive API Documentation</h2>
+      <p style="color:var(--text-muted); margin-bottom:24px;">Full reference for 50+ APIs, schemas, authentication, and SDKs.</p>
+
+      <div class="glass-card" style="margin-bottom:24px;">
+        <h3>Authentication Header</h3>
+        <p style="color:var(--text-muted); font-size:0.9rem; margin-top:4px;">Include your API key in all request headers:</p>
+        <div class="code-box" style="margin-top:8px;">Authorization: Bearer sk-demon-YOUR_GENERATED_KEY</div>
+      </div>
+
+      <div class="glass-card">
+        <h3>API Categories & Endpoints Specs</h3>
+        
+        <div style="margin-top:20px; display:flex; flex-direction:column; gap:20px;">
+          <div style="border-bottom:1px solid var(--border-glass); padding-bottom:16px;">
+            <span class="badge badge-purple">🧠 AI CATEGORY</span>
+            <h4 style="margin-top:8px; font-size:1.1rem;">POST /api/v1/ai/chat</h4>
+            <p style="color:var(--text-muted); font-size:0.9rem;">Generates natural language responses for chatbots and assistants.</p>
+            <div class="code-box" style="margin-top:8px;">Body: { "prompt": "Hello", "model": "demon-ai-pro" }</div>
+          </div>
+
+          <div style="border-bottom:1px solid var(--border-glass); padding-bottom:16px;">
+            <span class="badge badge-cyan">🛡️ SECURITY CATEGORY</span>
+            <h4 style="margin-top:8px; font-size:1.1rem;">GET /api/v1/security/ip</h4>
+            <p style="color:var(--text-muted); font-size:0.9rem;">Fetches IP geolocation, ISP, proxy, and VPN detection metrics.</p>
+            <div class="code-box" style="margin-top:8px;">Response: { "ip": "103.217.158.42", "country": "India", "is_vpn": false }</div>
+          </div>
+
+          <div>
+            <span class="badge badge-purple">🛠️ UTILITIES CATEGORY</span>
+            <h4 style="margin-top:8px; font-size:1.1rem;">GET /api/v1/utilities/uuid</h4>
+            <p style="color:var(--text-muted); font-size:0.9rem;">Generates v4 UUIDs for user sessions or database records.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. PRICING SECTION -->
+    <section id="sec-pricing" class="page-section">
+      <div style="text-align:center; margin-bottom:40px;">
+        <h2 style="font-size:2.5rem; font-weight:800;">Simple, Transparent Pricing</h2>
+        <p style="color:var(--text-muted);">FamPay Dynamic UPI QR Payments with Automatic IMAP Email Verification.</p>
+      </div>
+
+      <div class="grid-4">
+        <div class="glass-card">
+          <div class="badge badge-cyan">FREE</div>
+          <h3 style="font-size:1.8rem; margin-top:12px;">₹0 <span style="font-size:0.9rem; color:var(--text-subtle);">/month</span></h3>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">For hobbyists & testing</p>
+          <ul style="list-style:none; line-height:2.2; font-size:0.9rem; margin-bottom:24px;">
+            <li>✓ <b>5,000</b> Requests/month</li>
+            <li>✓ Access to 50+ APIs</li>
+          </ul>
+          <button class="btn btn-outline" style="width:100%; justify-content:center;">Active Free Plan</button>
+        </div>
+
+        <div class="glass-card">
+          <div class="badge badge-purple">STARTER</div>
+          <h3 style="font-size:1.8rem; margin-top:12px;">₹299 <span style="font-size:0.9rem; color:var(--text-subtle);">/month</span></h3>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">For personal projects & bots</p>
+          <ul style="list-style:none; line-height:2.2; font-size:0.9rem; margin-bottom:24px;">
+            <li>✓ <b>100,000</b> Requests/month</li>
+            <li>✓ High Speed Engine</li>
+          </ul>
+          <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="openFamPayModal('Starter')">Get Starter (₹299)</button>
+        </div>
+
+        <div class="glass-card" style="border-color:var(--purple-primary); box-shadow:0 0 30px var(--purple-glow);">
+          <div class="badge badge-purple">MOST POPULAR</div>
+          <h3 style="font-size:1.8rem; margin-top:12px;">₹999 <span style="font-size:0.9rem; color:var(--text-subtle);">/month</span></h3>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">For Telegram & Discord Bots</p>
+          <ul style="list-style:none; line-height:2.2; font-size:0.9rem; margin-bottom:24px;">
+            <li>✓ <b>1,000,000 (1 Million)</b> Requests</li>
+            <li>✓ Redis Fast Caching</li>
+          </ul>
+          <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="openFamPayModal('Pro')">Get Pro (₹999)</button>
+        </div>
+
+        <div class="glass-card">
+          <div class="badge badge-cyan">BUSINESS</div>
+          <h3 style="font-size:1.8rem; margin-top:12px;">₹4,999 <span style="font-size:0.9rem; color:var(--text-subtle);">/month</span></h3>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">For High Scale Applications</p>
+          <ul style="list-style:none; line-height:2.2; font-size:0.9rem; margin-bottom:24px;">
+            <li>✓ <b>10,000,000 (10 Million)</b> Requests</li>
+            <li>✓ Dedicated Infrastructure</li>
+          </ul>
+          <button class="btn btn-outline" style="width:100%; justify-content:center;" onclick="openFamPayModal('Business')">Get Business (₹4,999)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. ADMIN PANEL SECTION -->
+    <section id="sec-admin" class="page-section">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <div>
+          <h2 style="font-size:2.2rem; font-weight:900;">👑 Master Admin Control Center</h2>
+          <p style="color:var(--text-muted);">Admin Gmail Scanner Active: <code>ragini.19854@gmail.com</code> & <code>shubhkumarmishra82@gmail.com</code></p>
+        </div>
+        <span class="badge badge-admin" style="font-size:0.9rem; padding:8px 16px;">ADMIN ACCESS GRANTED</span>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:30px;">
+        <div class="glass-card stat-card">
+          <div class="stat-label">Registered Platform Users</div>
+          <div class="stat-value" id="adm-user-count" style="color:var(--purple-primary);">2</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-label">Active API Keys</div>
+          <div class="stat-value" id="adm-key-count" style="color:var(--cyan-primary);">2</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-label">Total API Calls</div>
+          <div class="stat-value" style="color:var(--green-success);">5,410</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-label">IMAP Verified Orders</div>
+          <div class="stat-value" id="adm-order-count">0</div>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <h3>Live Telemetry & IMAP Payment Logs</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Endpoint / Order</th>
+              <th>Status</th>
+              <th>Latency / Details</th>
+            </tr>
+          </thead>
+          <tbody id="admin-log-body">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Clean Universal Auth Gateway Modal -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-box" style="text-align:center;">
+      <h2 style="font-size:1.8rem; font-weight:900; margin-bottom:6px;">Demon API Portal Login</h2>
+      <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">Sign in to access your Developer or Admin panel.</p>
+
+      <!-- Google OAuth Card (Clean & Universal) -->
+      <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border-active); border-radius:14px; padding:20px; margin-bottom:20px; text-align:left;">
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+          <span style="font-size:1.2rem;">🌐</span>
+          <b style="font-size:0.95rem;">Sign In with Google</b>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">Google Account Email</label>
+          <input type="email" class="form-input" id="google-auth-email" placeholder="Enter your Gmail address (e.g. name@gmail.com)...">
+        </div>
+        <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="triggerGoogleLogin()">
+          🚀 Continue with Google
+        </button>
+      </div>
+
+      <div style="position:relative; text-align:center; margin:16px 0; border-bottom:1px solid var(--border-glass);">
+        <span style="position:relative; top:10px; background:#0c0c1c; padding:0 12px; color:var(--text-subtle); font-size:0.8rem;">OR USE PASSWORD</span>
+      </div>
+
+      <!-- Normal Email / Password -->
+      <div class="form-group" style="text-align:left; margin-top:20px;">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-input" id="auth-email" placeholder="user@example.com">
+      </div>
+      <div class="form-group" style="text-align:left;">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="auth-password" placeholder="••••••••">
+      </div>
+
+      <div style="display:flex; gap:12px; margin-top:20px;">
+        <button class="btn btn-cyan" style="flex:1; justify-content:center;" onclick="handleEmailLogin()">Sign In</button>
+        <button class="btn btn-outline" style="flex:1; justify-content:center;" onclick="handleEmailRegister()">Register</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Key Work Details Modal -->
+  <div class="modal-overlay" id="keyModal">
+    <div class="modal-box">
+      <h3 style="margin-bottom:8px; font-weight:800;">Create Custom API Key</h3>
+      <p style="color:var(--text-muted); font-size:0.88rem; margin-bottom:20px;">Specify your work details to generate your API key.</p>
+
+      <div class="form-group">
+        <label class="form-label">Project / App Name *</label>
+        <input type="text" class="form-input" id="modal-project-name" placeholder="e.g. Cyber Assistant Bot">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Purpose / Work Detail *</label>
+        <textarea class="form-textarea" id="modal-work-detail" rows="3" placeholder="Describe what work you need this API key for (e.g. Building an automated Telegram chatbot for user queries)"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Target Platform *</label>
+        <select class="form-select" id="modal-platform">
+          <option value="Telegram Bot">Telegram Bot</option>
+          <option value="Discord Bot">Discord Bot</option>
+          <option value="Web Application">Web Application</option>
+          <option value="Mobile App">Mobile App</option>
+          <option value="AI Agent / Script">AI Agent / Script</option>
+        </select>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+        <button class="btn btn-outline" onclick="closeKeyModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="createApiKeySubmit()">⚡ Generate API Key</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FamPay Dynamic UPI QR Payment Modal -->
+  <div class="modal-overlay" id="fampayModal">
+    <div class="modal-box" style="text-align:center;">
+      <h3 style="margin-bottom:8px;">Scan & Pay via FamPay UPI</h3>
+      <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:16px;">Pay <b id="fp-amount-text">₹999</b> for <b id="fp-plan-text">Pro</b> Plan</p>
+
+      <div style="background:#fff; padding:16px; border-radius:12px; display:inline-block; margin-bottom:16px;">
+        <img id="fp-qr-img" src="" alt="FamPay Dynamic QR" style="width:220px; height:220px; display:block;">
+      </div>
+
+      <div class="code-box" style="margin-bottom:16px; text-align:left;">
+        <div><b>UPI VPA:</b> <span style="color:var(--cyan-primary);">madara412@fam</span></div>
+        <div><b>Order ID:</b> <span id="fp-order-id" style="color:var(--purple-primary);">ORDER_DEMON_0000</span></div>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <button class="btn btn-cyan" style="width:100%; justify-content:center;" onclick="verifyImapPaymentClick()">🔄 Automatic IMAP Verification Check</button>
+        <div id="fp-status-msg" style="margin-top:10px; font-size:0.88rem; color:var(--text-muted);">Waiting for payment email...</div>
+      </div>
+
+      <button class="btn btn-outline" style="width:100%; justify-content:center;" onclick="closeFamPayModal()">Close</button>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <p>© 2026 Demon API Platform • Built for Developers, Telegram Bots, and Discord Bots.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
